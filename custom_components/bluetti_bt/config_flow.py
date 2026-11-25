@@ -79,6 +79,20 @@ class BluettiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Handle click on "OK" button
         if user_input is not None:
             discovery_info = self._discovery_info
+            if discovery_info is None:
+                address = user_input[CONF_ADDRESS]
+                name = user_input.get("device_name", "EL4002542111494682")
+                return self.async_create_entry(
+                    title=name,
+                    data=InitialDeviceConfig(
+                        address,
+                        name,
+                        "EL400",
+                        True,
+                    ).as_dict
+                    | OptionalDeviceConfig.from_dict({}).as_dict,
+                )
+
             address = discovery_info.address
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
@@ -106,7 +120,21 @@ class BluettiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         if not self._discovery_info:
-            return self.async_abort(reason="no_unconfigured_devices")
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_ADDRESS,
+                            default="A8:46:74:30:CA:2A",
+                        ): str,
+                        vol.Optional(
+                            "device_name",
+                            default="EL4002542111494682",
+                        ): str,
+                    }
+                ),
+            )
 
         # The input from this is not used, we use the discovered and known working address
         data_schema = vol.Schema(
