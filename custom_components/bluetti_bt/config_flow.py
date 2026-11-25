@@ -11,6 +11,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
+import bluetti_bt_lib
 from bluetti_bt_lib import recognize_device
 from bluetti_bt_lib.bluetooth.device_recognizer import DeviceRecognizerResult
 
@@ -25,6 +26,11 @@ class BluettiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         _LOGGER.info("Initialize config flow")
+        _LOGGER.warning(
+            "Bluetti BT runtime library: version=%s path=%s",
+            getattr(bluetti_bt_lib, "__version__", "unknown"),
+            getattr(bluetti_bt_lib, "__file__", "unknown"),
+        )
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
