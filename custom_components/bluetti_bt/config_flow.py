@@ -12,6 +12,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 from bluetti_bt_lib import recognize_device
+from bluetti_bt_lib.bluetooth.device_recognizer import DeviceRecognizerResult
 
 from .types import InitialDeviceConfig, ManufacturerData, OptionalDeviceConfig
 from .const import DOMAIN
@@ -38,6 +39,13 @@ class BluettiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         recognized = await recognize_device(
             discovery_info.address, self.hass.loop.create_future
         )
+
+        # The EL400 advertises as a supported BLUETTI device but its
+        # firmware can reject the initial register probe.  Let it through so
+        # the normal reader can perform the actual connection attempt.
+        if recognized is None and (discovery_info.name or "").startswith("EL400"):
+            serial = (discovery_info.name or "EL400")[5:] or "000000000000"
+            recognized = DeviceRecognizerResult("EL400", 2, True, serial)
 
         if recognized is None:
             return self.async_abort(reason="Device type not supported")
