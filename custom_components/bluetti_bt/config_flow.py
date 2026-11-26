@@ -43,7 +43,9 @@ class BluettiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Get device type
         recognized = await recognize_device(
-            discovery_info.address, self.hass.loop.create_future
+            discovery_info.address,
+            self.hass.loop.create_future,
+            ble_device=discovery_info.device,
         )
 
         # The EL400 advertises as a supported BLUETTI device but its

@@ -61,13 +61,13 @@ class PollingCoordinator(DataUpdateCoordinator):
         so entities can quickly look up their data.
         """
 
-        # Check if device is connected
-        if (
-            bluetooth.async_address_present(
-                self.hass, self.config.address, connectable=True
-            )
-            is False
-        ):
+        # Ask Home Assistant's Bluetooth manager for the connectable device.
+        # This is essential for ESPHome proxies: a local BleakScanner would
+        # bypass the selected remote scanner and force a direct BlueZ path.
+        ble_device = bluetooth.async_ble_device_from_address(
+            self.hass, self.config.address, connectable=True
+        )
+        if ble_device is None:
             self.logger.warning("Device not connected")
             self.last_update_success = False
             return None
@@ -80,4 +80,4 @@ class PollingCoordinator(DataUpdateCoordinator):
             self.last_update_success = False
             return None
 
-        return await self.reader.read()
+        return await self.reader.read(ble_device=ble_device)
